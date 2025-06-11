@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game - Multiplayer Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #9C27B0 0%, #673AB7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            color: #fff;
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .setup-section {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .setup-section.active {
+            display: block;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+        }
+
+        .mode-selector {
+            margin: 20px 0;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1.1em;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .mode-btn.active {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .room-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .player-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+
+        .player-card.current {
+            border: 2px solid #4CAF50;
+        }
+
+        .chat-section {
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .chat-message {
+            text-align: left;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .player-status {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .guess-history {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-5px);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .mode-buttons {
+                flex-direction: column;
+            }
+            
+            .mode-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="number_game.html" class="back-button">← Back to Main Game</a>
+    
+    <div class="game-container">
+        <h1>👥 Multiplayer Mode</h1>
+        <p class="subtitle">Compete with friends to guess the number!</p>
+
+        <div class="setup-section active">
+            <div class="mode-selector">
+                <h3>Select Game Mode:</h3>
+                <div class="mode-buttons">
+                    <button class="mode-btn" onclick="selectMode('1v1')">
+                        🤺 1v1 Battle Mode
+                    </button>
+                    <button class="mode-btn" onclick="selectMode('group-3')">
+                        👥 3 Player Arena
+                    </button>
+                    <button class="mode-btn" onclick="selectMode('group-4')">
+                        👥 4 Player Arena
+                    </button>
+                    <button class="mode-btn" onclick="selectMode('turn-based')">
+                        🔄 Turn-Based Mode
+                    </button>
+                </div>
+            </div>
+
+            <div class="room-section">
+                <div class="input-group">
+                    <h3>Create or Join Room</h3>
+                    <input type="text" id="playerName" placeholder="Enter your name">
+                </div>
+                <div class="mode-buttons">
+                    <button class="mode-btn" onclick="createRoom()">Create Room</button>
+                    <button class="mode-btn" onclick="showJoinRoom()">Join Room</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-section">
+            <div class="room-info">
+                <h3>Room: <span id="roomCode">----</span></h3>
+                <p>Players: <span id="playerCount">1</span>/<span id="maxPlayers">2</span></p>
+            </div>
+
+            <div class="player-list" id="playerList">
+                <!-- Player cards will be added here -->
+            </div>
+
+            <div class="game-board" id="gameBoard" style="display: none;">
+                <div class="input-group">
+                    <input type="number" id="guessInput" placeholder="Enter your guess">
+                    <button onclick="makeGuess()">Guess!</button>
+                </div>
+
+                <div class="guess-history" id="guessHistory">
+                    <!-- Guess history will be added here -->
+                </div>
+            </div>
+
+            <div class="chat-section" id="chatSection">
+                <!-- Chat messages will be added here -->
+            </div>
+
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatInput(event)">
+        </div>
+    </div>
+
+    <script>
+        let currentMode = null;
+        let roomCode = null;
+        let playerName = null;
+        let players = [];
+        let currentPlayer = null;
+        let gameActive = false;
+        let secretNumber = null;
+        let guessHistory = [];
+
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update max players based on mode
+            const maxPlayers = {
+                '1v1': 2,
+                'group-3': 3,
+                'group-4': 4,
+                'turn-based': 4
+            }[mode];
+
+            document.getElementById('maxPlayers').textContent = maxPlayers;
+        }
+
+        function createRoom() {
+            playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+            if (!currentMode) {
+                alert('Please select a game mode');
+                return;
+            }
+
+            // Generate room code
+            roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            // Initialize game
+            initializeGame();
+        }
+
+        function showJoinRoom() {
+            const code = prompt('Enter room code:');
+            if (code) {
+                joinRoom(code);
+            }
+        }
+
+        function joinRoom(code) {
+            playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('Please enter your name');
+                return;
+            }
+
+            // Validate room code and join
+            roomCode = code;
+            initializeGame();
+        }
+
+        function initializeGame() {
+            document.querySelector('.setup-section').classList.remove('active');
+            document.querySelector('.game-section').classList.add('active');
+            
+            document.getElementById('roomCode').textContent = roomCode;
+            
+            // Add first player
+            addPlayer(playerName, true);
+            
+            // In a real implementation, this would connect to a server
+            simulateOtherPlayers();
+        }
+
+        function addPlayer(name, isCurrentPlayer = false) {
+            const player = {
+                name: name,
+                score: 0,
+                guesses: []
+            };
+            
+            players.push(player);
+            if (isCurrentPlayer) {
+                currentPlayer = player;
+            }
+            
+            updatePlayerList();
+        }
+
+        function updatePlayerList() {
+            const playerList = document.getElementById('playerList');
+            playerList.innerHTML = '';
+            
+            players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = `player-card ${player === currentPlayer ? 'current' : ''}`;
+                card.innerHTML = `
+                    <h4>${player.name}</h4>
+                    <p>Score: ${player.score}</p>
+                    <p>Guesses: ${player.guesses.length}</p>
+                `;
+                playerList.appendChild(card);
+            });
+            
+            document.getElementById('playerCount').textContent = players.length;
+        }
+
+        function makeGuess() {
+            if (!gameActive) return;
+
+            const guess = parseInt(document.getElementById('guessInput').value);
+            if (isNaN(guess)) return;
+
+            addGuess(currentPlayer.name, guess);
+            document.getElementById('guessInput').value = '';
+        }
+
+        function addGuess(playerName, guess) {
+            const guessEntry = document.createElement('div');
+            guessEntry.className = 'chat-message';
+            guessEntry.textContent = `${playerName} guessed: ${guess}`;
+            document.getElementById('guessHistory').appendChild(guessEntry);
+        }
+
+        function handleChatInput(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (message) {
+                    addChatMessage(playerName, message);
+                    input.value = '';
+                }
+            }
+        }
+
+        function addChatMessage(playerName, message) {
+            const chatMessage = document.createElement('div');
+            chatMessage.className = 'chat-message';
+            chatMessage.textContent = `${playerName}: ${message}`;
+            document.getElementById('chatSection').appendChild(chatMessage);
+            document.getElementById('chatSection').scrollTop = document.getElementById('chatSection').scrollHeight;
+        }
+
+        // Simulate other players joining (for demo)
+        function simulateOtherPlayers() {
+            if (currentMode === '1v1') {
+                setTimeout(() => addPlayer('Player 2'), 1000);
+            } else if (currentMode === 'group-3') {
+                setTimeout(() => addPlayer('Player 2'), 1000);
+                setTimeout(() => addPlayer('Player 3'), 2000);
+            } else if (currentMode === 'group-4') {
+                setTimeout(() => addPlayer('Player 2'), 1000);
+                setTimeout(() => addPlayer('Player 3'), 2000);
+                setTimeout(() => addPlayer('Player 4'), 3000);
+            }
+            
+            // Start game after players join
+            setTimeout(() => {
+                gameActive = true;
+                secretNumber = Math.floor(Math.random() * 100) + 1;
+                document.getElementById('gameBoard').style.display = 'block';
+                addChatMessage('System', 'Game started! Guess a number between 1 and 100');
+            }, 4000);
+        }
+    </script>
+</body>
+</html> 

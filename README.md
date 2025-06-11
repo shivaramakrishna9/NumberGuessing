@@ -1,5 +1,7 @@
-# NumberGuessing
-The Number Guessing Game is a simple interactive game where the player tries to guess a randomly  generated number within a specified range.
+ Number Guessing Game
+
+An interactive and feature-rich number guessing game built with HTML, CSS, and JavaScript. Test your intuition and mathematical skills while having fun!
+
  Features:
 
  Game Modes

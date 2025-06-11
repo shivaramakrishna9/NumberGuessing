@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game - Time Attack Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF9800 0%, #F44336 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes timerWarning {
+            0%, 100% { color: white; }
+            50% { color: #FF5252; }
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            color: #fff;
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .setup-section {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .setup-section.active {
+            display: block;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+        }
+
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-display.warning {
+            animation: timerWarning 1s infinite;
+        }
+
+        .guess-timer {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .guess-timer-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 100%;
+            transition: width linear;
+        }
+
+        .guess-timer-fill.warning {
+            background: #FF5252;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        input[type="number"] {
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            width: 200px;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            background: #4CAF50;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mode-selector {
+            margin-bottom: 20px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            border-color: white;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            min-height: 50px;
+        }
+
+        .feedback.success {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .feedback.error {
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-5px);
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+        }
+
+        .difficulty-btn.active {
+            border-color: white;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .voice-btn {
+            padding: 15px;
+            background: #E91E63;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .voice-btn:hover {
+            transform: scale(1.1);
+            background: #D81B60;
+        }
+
+        .voice-btn.listening {
+            animation: pulse 1.5s infinite;
+            background: #4CAF50;
+        }
+
+        .voice-feedback {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 1.2em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .voice-feedback.active {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .timer-display {
+                font-size: 2.5em;
+            }
+            
+            .mode-buttons {
+                flex-direction: column;
+            }
+            
+            input[type="number"] {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="number_game.html" class="back-button">← Back to Main Game</a>
+    
+    <div class="game-container">
+        <h1>⏱️ Time Attack Mode</h1>
+        <p class="subtitle">Race against time to guess the number!</p>
+
+        <div class="setup-section active">
+            <div class="mode-selector">
+                <h3>Select Mode:</h3>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" onclick="selectMode('classic')">Classic Time Attack</button>
+                    <button class="mode-btn" onclick="selectMode('sudden-death')">Sudden Death</button>
+                </div>
+            </div>
+
+            <div class="difficulty-selector">
+                <h3>Select Difficulty:</h3>
+                <div class="mode-buttons">
+                    <button class="difficulty-btn active" onclick="selectDifficulty('easy')">
+                        Easy (1-50)
+                    </button>
+                    <button class="difficulty-btn" onclick="selectDifficulty('medium')">
+                        Medium (1-100)
+                    </button>
+                    <button class="difficulty-btn" onclick="selectDifficulty('hard')">
+                        Hard (1-200)
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="startGame()">Start Game</button>
+        </div>
+
+        <div class="game-section">
+            <div class="timer-display" id="mainTimer">30.0</div>
+            <div class="guess-timer">
+                <div class="guess-timer-fill" id="guessTimerFill"></div>
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="guessInput" placeholder="Enter your guess">
+                <button onclick="makeGuess()">Guess!</button>
+                <button class="voice-btn" onclick="toggleVoiceRecognition()" id="voiceButton" title="Voice Control">🎙️</button>
+            </div>
+
+            <div class="voice-feedback" id="voiceFeedback"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="stats">
+                <h3>📊 Statistics</h3>
+                <div class="stat-item">
+                    <span>Best Time:</span>
+                    <span id="bestTime">-</span>
+                </div>
+                <div class="stat-item">
+                    <span>Games Played:</span>
+                    <span id="gamesPlayed">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Success Rate:</span>
+                    <span id="successRate">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span>Average Time:</span>
+                    <span id="avgTime">-</span>
+                </div>
+            </div>
+
+            <button onclick="newGame()">New Game</button>
+        </div>
+    </div>
+
+    <script>
+        // Game configuration
+        const config = {
+            classic: {
+                totalTime: 30000, // 30 seconds
+                guessTime: 10000, // 10 seconds per guess
+                timeWarning: 10000 // Warning at 10 seconds remaining
+            },
+            'sudden-death': {
+                totalTime: 30000,
+                guessTime: 5000, // 5 seconds per guess
+                timeWarning: 10000
+            }
+        };
+
+        // Game state
+        let gameMode = 'classic';
+        let difficulty = 'easy';
+        let secretNumber;
+        let gameActive = false;
+        let mainTimer;
+        let guessTimer;
+        let startTime;
+        let timeRemaining;
+        let guessTimeRemaining;
+        let stats = {
+            bestTime: Infinity,
+            gamesPlayed: 0,
+            gamesWon: 0,
+            totalTime: 0
+        };
+
+        // Difficulty settings
+        const difficulties = {
+            easy: { min: 1, max: 50 },
+            medium: { min: 1, max: 100 },
+            hard: { min: 1, max: 200 }
+        };
+
+        // Voice recognition
+        let recognition = null;
+        let isListening = false;
+
+        function selectMode(mode) {
+            gameMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.mode-btn[onclick*="${mode}"]`).classList.add('active');
+        }
+
+        function selectDifficulty(diff) {
+            difficulty = diff;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.difficulty-btn[onclick*="${diff}"]`).classList.add('active');
+        }
+
+        function startGame() {
+            const diffSettings = difficulties[difficulty];
+            secretNumber = Math.floor(Math.random() * (diffSettings.max - diffSettings.min + 1)) + diffSettings.min;
+            
+            document.querySelector('.setup-section').classList.remove('active');
+            document.querySelector('.game-section').classList.add('active');
+            
+            gameActive = true;
+            startTime = Date.now();
+            timeRemaining = config[gameMode].totalTime;
+            guessTimeRemaining = config[gameMode].guessTime;
+            
+            updateTimerDisplay();
+            startTimers();
+            
+            document.getElementById('guessInput').focus();
+            showFeedback(`Guess a number between ${diffSettings.min} and ${diffSettings.max}!`, 'info');
+        }
+
+        function startTimers() {
+            // Main game timer
+            mainTimer = setInterval(() => {
+                timeRemaining = Math.max(0, config[gameMode].totalTime - (Date.now() - startTime));
+                updateTimerDisplay();
+                
+                if (timeRemaining <= config[gameMode].timeWarning) {
+                    document.getElementById('mainTimer').classList.add('warning');
+                }
+                
+                if (timeRemaining <= 0) {
+                    endGame(false);
+                }
+            }, 100);
+
+            // Individual guess timer
+            startGuessTimer();
+        }
+
+        function startGuessTimer() {
+            const guessTimerFill = document.getElementById('guessTimerFill');
+            guessTimerFill.style.transition = 'none';
+            guessTimerFill.style.width = '100%';
+            
+            setTimeout(() => {
+                guessTimerFill.style.transition = `width ${config[gameMode].guessTime}ms linear`;
+                guessTimerFill.style.width = '0%';
+            }, 50);
+
+            guessTimer = setTimeout(() => {
+                if (gameMode === 'sudden-death') {
+                    endGame(false);
+                } else {
+                    showFeedback('Time\'s up for this guess!', 'error');
+                    startGuessTimer();
+                }
+            }, config[gameMode].guessTime);
+        }
+
+        function resetGuessTimer() {
+            clearTimeout(guessTimer);
+            startGuessTimer();
+        }
+
+        function updateTimerDisplay() {
+            const seconds = (timeRemaining / 1000).toFixed(1);
+            document.getElementById('mainTimer').textContent = seconds;
+        }
+
+        function makeGuess() {
+            if (!gameActive) return;
+
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+            const diffSettings = difficulties[difficulty];
+
+            if (isNaN(guess) || guess < diffSettings.min || guess > diffSettings.max) {
+                showFeedback(`Please enter a number between ${diffSettings.min} and ${diffSettings.max}!`, 'error');
+                return;
+            }
+
+            if (gameMode === 'sudden-death' && guess !== secretNumber) {
+                endGame(false);
+                return;
+            }
+
+            if (guess === secretNumber) {
+                const timeUsed = config[gameMode].totalTime - timeRemaining;
+                endGame(true, timeUsed);
+            } else {
+                const feedback = guess < secretNumber ? 'Too low!' : 'Too high!';
+                showFeedback(feedback, 'error');
+                resetGuessTimer();
+            }
+
+            input.value = '';
+            input.focus();
+        }
+
+        function endGame(won, timeUsed) {
+            gameActive = false;
+            clearInterval(mainTimer);
+            clearTimeout(guessTimer);
+
+            if (won) {
+                const timeInSeconds = (timeUsed / 1000).toFixed(1);
+                showFeedback(`Congratulations! You won in ${timeInSeconds} seconds!`, 'success');
+                
+                stats.gamesWon++;
+                stats.bestTime = Math.min(stats.bestTime, timeUsed);
+                stats.totalTime += timeUsed;
+            } else {
+                showFeedback(`Game Over! The number was ${secretNumber}`, 'error');
+            }
+
+            stats.gamesPlayed++;
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('gamesPlayed').textContent = stats.gamesPlayed;
+            document.getElementById('successRate').textContent = 
+                `${Math.round((stats.gamesWon / stats.gamesPlayed) * 100)}%`;
+            
+            if (stats.bestTime < Infinity) {
+                document.getElementById('bestTime').textContent = 
+                    `${(stats.bestTime / 1000).toFixed(1)}s`;
+            }
+            
+            if (stats.gamesWon > 0) {
+                document.getElementById('avgTime').textContent = 
+                    `${((stats.totalTime / stats.gamesWon) / 1000).toFixed(1)}s`;
+            }
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+        }
+
+        function newGame() {
+            document.querySelector('.game-section').classList.remove('active');
+            document.querySelector('.setup-section').classList.add('active');
+            document.getElementById('mainTimer').classList.remove('warning');
+            document.getElementById('guessTimerFill').className = 'guess-timer-fill';
+        }
+
+        // Event listener for Enter key
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                makeGuess();
+            }
+        });
+
+        function initVoiceRecognition() {
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    recognition = new SpeechRecognition();
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                    recognition.lang = 'en-US';
+                    
+                    setupVoiceEventListeners();
+                } else {
+                    document.getElementById('voiceButton').style.display = 'none';
+                    showVoiceFeedback('Voice recognition not supported in this browser', 3000);
+                }
+            } catch (e) {
+                document.getElementById('voiceButton').style.display = 'none';
+                showVoiceFeedback('Voice recognition not supported', 3000);
+            }
+        }
+
+        function setupVoiceEventListeners() {
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voiceButton').classList.add('listening');
+                showVoiceFeedback('Listening... Say your guess!');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('voiceButton').classList.remove('listening');
+                hideVoiceFeedback();
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                document.getElementById('voiceButton').classList.remove('listening');
+                showVoiceFeedback('Voice recognition error', 3000);
+                console.error('Speech recognition error:', event.error);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                const number = parseVoiceInput(transcript);
+                
+                if (number !== null) {
+                    showVoiceFeedback(`I heard: ${number}`, 2000);
+                    document.getElementById('guessInput').value = number;
+                    setTimeout(() => makeGuess(), 1000);
+                } else {
+                    showVoiceFeedback('Please say a valid number', 3000);
+                }
+            };
+        }
+
+        function parseVoiceInput(transcript) {
+            // Remove all spaces and convert written numbers to digits
+            const cleanTranscript = transcript.replace(/\s+/g, '');
+            
+            // First try to find a direct number
+            const directNumber = parseInt(cleanTranscript);
+            if (!isNaN(directNumber)) return directNumber;
+            
+            // Define number words
+            const numberWords = {
+                'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+                'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+                'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13,
+                'fourteen': 14, 'fifteen': 15, 'sixteen': 16, 'seventeen': 17,
+                'eighteen': 18, 'nineteen': 19, 'twenty': 20
+            };
+            
+            // Try to match number words
+            for (let word in numberWords) {
+                if (cleanTranscript.includes(word)) {
+                    return numberWords[word];
+                }
+            }
+            
+            return null;
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                initVoiceRecognition();
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+                showVoiceFeedback('Voice recognition stopped', 2000);
+            } else {
+                recognition.start();
+            }
+        }
+
+        function showVoiceFeedback(message, duration = null) {
+            const feedback = document.getElementById('voiceFeedback');
+            feedback.textContent = message;
+            feedback.classList.add('active');
+            
+            if (duration) {
+                setTimeout(() => hideVoiceFeedback(), duration);
+            }
+        }
+
+        function hideVoiceFeedback() {
+            const feedback = document.getElementById('voiceFeedback');
+            feedback.classList.remove('active');
+        }
+
+        // Initialize voice recognition when the game starts
+        window.onload = () => {
+            initVoiceRecognition();
+        };
+    </script>
+</body>
+</html> 

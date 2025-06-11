@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: all 0.5s ease;
+        }
+
+        /* Theme Styles */
+        body.dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+        }
+
+        body.retro {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            font-family: 'Courier New', monospace;
+        }
+
+        body.neon {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #00ffff;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .dark .game-container {
+            background: #34495e;
+            color: white;
+            box-shadow: 0 20px 40px rgba(255,255,255,0.1);
+        }
+
+        .retro .game-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            border: 3px solid #ff6b6b;
+            box-shadow: 5px 5px 0 #4ecdc4, 10px 10px 0 #ff6b6b;
+        }
+
+        .neon .game-container {
+            background: rgba(0, 20, 40, 0.9);
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 20px #00ffff,
+                inset 0 0 20px rgba(0,255,255,0.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px #4CAF50; }
+            50% { box-shadow: 0 0 20px #4CAF50, 0 0 30px #4CAF50; }
+            100% { box-shadow: 0 0 5px #4CAF50; }
+        }
+
+        @keyframes neonGlow {
+            0% { text-shadow: 0 0 5px currentColor; }
+            50% { text-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+            100% { text-shadow: 0 0 5px currentColor; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .theme-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .theme-btn.active {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.15);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            transition: all 0.5s ease;
+        }
+
+        .dark h1, .retro h1, .neon h1 {
+            color: inherit;
+        }
+
+        .neon h1 {
+            animation: neonGlow 2s ease-in-out infinite alternate;
+        }
+
+        .retro h1 {
+            text-shadow: 3px 3px 0 #ff6b6b;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .difficulty-section {
+            margin-bottom: 30px;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .difficulty-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .difficulty-btn.easy {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .difficulty-btn.medium {
+            background: #FF9800;
+            color: white;
+        }
+
+        .difficulty-btn.hard {
+            background: #f44336;
+            color: white;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .difficulty-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .game-info {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+
+        .input-section {
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #guessInput {
+            width: 200px;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            margin-right: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        #guessInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .guess-btn {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .guess-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .guess-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            animation: glow 1s ease-in-out;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .feedback.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .feedback.warm {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            animation: pulse 1s;
+        }
+
+        /* Dark theme feedback */
+        .dark .feedback.success {
+            background: #155724;
+            color: #d4edda;
+            border: 1px solid #28a745;
+        }
+
+        .dark .feedback.error {
+            background: #721c24;
+            color: #f8d7da;
+            border: 1px solid #dc3545;
+        }
+
+        .dark .feedback.info {
+            background: #0c5460;
+            color: #d1ecf1;
+            border: 1px solid #17a2b8;
+        }
+
+        /* Neon theme feedback */
+        .neon .feedback.success {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .neon .feedback.error {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff0040;
+            border: 1px solid #ff0040;
+            box-shadow: 0 0 10px #ff0040;
+        }
+
+        .neon .feedback.info {
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        .attempts-counter {
+            font-size: 1.2em;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #FF9800, #f44336);
+            transition: width 0.3s ease;
+        }
+
+        .game-controls {
+            margin-top: 30px;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .new-game-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .new-game-btn:hover {
+            background: #218838;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stats h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            margin: 0 10px;
+        }
+
+        .hint-btn {
+            padding: 10px 20px;
+            background: #9c27b0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn:hover {
+            background: #7b1fa2;
+            transform: translateY(-2px);
+        }
+
+        .hint-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hint-text {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(156, 39, 176, 0.1);
+            display: none;
+        }
+
+        .hint-text.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .hint-count {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        /* Dark theme hints */
+        .dark .hint-text {
+            background: rgba(156, 39, 176, 0.2);
+            color: white;
+        }
+
+        .dark .hint-count {
+            color: #ccc;
+        }
+
+        /* Neon theme hints */
+        .neon .hint-text {
+            background: rgba(156, 39, 176, 0.1);
+            color: #ff00ff;
+            border: 1px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .neon .hint-btn {
+            background: rgba(156, 39, 176, 0.8);
+            border: 1px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        /* Retro theme hints */
+        .retro .hint-text {
+            border: 2px dashed #ff6b6b;
+            font-family: 'Courier New', monospace;
+        }
+
+        .retro .hint-btn {
+            border: 2px solid #ff6b6b;
+            box-shadow: 3px 3px 0 #4ecdc4;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            #guessInput {
+                width: 100%;
+                margin-bottom: 15px;
+                margin-right: 0;
+            }
+            
+            .difficulty-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .difficulty-btn {
+                width: 200px;
+            }
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .lang-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .lang-btn.active {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.15);
+        }
+
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: absolute;
+            top: 10px;
+            left: 0;
+            padding: 0 10px;
+        }
+
+        .lang-select {
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            color: inherit;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-select:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .mode-selector {
+            margin: 20px 0;
+        }
+
+        .mode-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .mode-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            min-width: 200px;
+        }
+
+        .mode-btn.classic {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .mode-btn.time-attack {
+            background: #FF9800;
+            color: white;
+        }
+
+        .mode-btn.endless {
+            background: #2196F3;
+            color: white;
+        }
+
+        .mode-btn.multiplayer {
+            background: #9C27B0;
+            color: white;
+        }
+
+        .mode-btn.ai {
+            background: #673AB7;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .timer {
+            font-size: 1.5em;
+            margin: 10px 0;
+            color: #FF9800;
+            font-weight: bold;
+            display: none;
+        }
+
+        .timer.active {
+            display: block;
+        }
+
+        .multiplayer-info {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(156, 39, 176, 0.1);
+            display: none;
+        }
+
+        .multiplayer-info.active {
+            display: block;
+        }
+
+        .player-status {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+
+        .player-card {
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .player-card.current {
+            border: 2px solid #9C27B0;
+        }
+
+        /* Dark theme adaptations */
+        .dark .lang-select {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .dark .multiplayer-info {
+            background: rgba(156, 39, 176, 0.2);
+        }
+
+        /* Neon theme adaptations */
+        .neon .lang-select {
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 10px rgba(0,255,255,0.3);
+            color: #00ffff;
+        }
+
+        .neon .timer {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        /* Retro theme adaptations */
+        .retro .lang-select {
+            border: 2px solid #ff6b6b;
+            font-family: 'Courier New', monospace;
+        }
+
+        .voice-btn {
+            padding: 15px;
+            background: #E91E63;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .voice-btn:hover {
+            transform: scale(1.1);
+            background: #D81B60;
+        }
+
+        .voice-btn.listening {
+            animation: pulse 1.5s infinite;
+            background: #4CAF50;
+        }
+
+        .voice-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            animation: none;
+        }
+
+        .voice-feedback {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 1.2em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .voice-feedback.active {
+            opacity: 1;
+        }
+
+        /* Dark theme voice control */
+        .dark .voice-btn {
+            background: #E91E63;
+        }
+
+        .dark .voice-btn:hover {
+            background: #D81B60;
+        }
+
+        .dark .voice-btn.listening {
+            background: #4CAF50;
+        }
+
+        /* Neon theme voice control */
+        .neon .voice-btn {
+            background: rgba(233, 30, 99, 0.8);
+            border: 1px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .neon .voice-btn.listening {
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .neon .voice-feedback {
+            background: rgba(0, 20, 40, 0.9);
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Retro theme voice control */
+        .retro .voice-btn {
+            border: 2px solid #ff6b6b;
+            box-shadow: 3px 3px 0 #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+            <div class="game-container">
+        <div class="top-controls">
+            <div class="language-selector">
+                <select class="lang-select" onchange="setLanguage(this.value)">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="hi">🇮🇳 हिंदी</option>
+                </select>
+            </div>
+        <div class="theme-selector">
+            <button class="theme-btn" onclick="setTheme('light')" title="Light Theme">☀️</button>
+            <button class="theme-btn" onclick="setTheme('dark')" title="Dark Theme">🌙</button>
+            <button class="theme-btn" onclick="setTheme('retro')" title="Retro Theme">🕹️</button>
+            <button class="theme-btn" onclick="setTheme('neon')" title="Neon Theme">💫</button>
+            </div>
+        </div>
+        
+        <h1>🎯 Number Guessing Game</h1>
+        <p class="subtitle">Test your intuition and guess the secret number!</p>
+        
+        <div class="difficulty-section">
+            <h3>Choose Difficulty:</h3>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn easy active" onclick="setDifficulty('easy')">
+                    Easy (1-50, 10 attempts)
+                </button>
+                <button class="difficulty-btn medium" onclick="setDifficulty('medium')">
+                    Medium (1-100, 7 attempts)
+                </button>
+                <button class="difficulty-btn hard" onclick="setDifficulty('hard')">
+                    Hard (1-200, 5 attempts)
+                </button>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <p id="gameInfo">I'm thinking of a number between 1 and 50. You have 10 attempts!</p>
+            <div class="hints-section">
+                <button class="hint-btn" onclick="getHint()" id="hintButton">
+                    🧠 Get Hint
+                </button>
+                <p id="hintText" class="hint-text"></p>
+                <p class="hint-count" id="hintCount">Hints remaining: 3</p>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <input type="number" id="guessInput" placeholder="Enter your guess" min="1" max="50">
+            <button class="voice-btn" onclick="toggleVoiceRecognition()" id="voiceButton" title="Voice Control">🎙️</button>
+            <button class="guess-btn" onclick="makeGuess()">Guess!</button>
+        </div>
+
+        <div class="voice-feedback" id="voiceFeedback"></div>
+
+        <div class="attempts-counter">
+            <span id="attemptsText">Attempts: 0 / 10</span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback">
+            Make your first guess! 🤔
+        </div>
+
+        <div class="game-controls">
+            <button class="control-btn new-game-btn" onclick="newGame()">New Game</button>
+        </div>
+
+        <div class="stats" id="stats">
+            <h3>📊 Game Statistics</h3>
+            <div class="stat-item">
+                <span>Games Played:</span>
+                <span id="gamesPlayed">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Games Won:</span>
+                <span id="gamesWon">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Win Rate:</span>
+                <span id="winRate">0%</span>
+            </div>
+            <div class="stat-item">
+                <span>Best Score:</span>
+                <span id="bestScore">-</span>
+            </div>
+        </div>
+
+        <div class="mode-selector">
+            <h3>Select Game Mode:</h3>
+            <div class="mode-buttons">
+                <button class="mode-btn classic active" onclick="window.location.href='classic_mode.html'">
+                    🎯 Classic Mode
+                </button>
+                <button class="mode-btn time-attack" onclick="window.location.href='time_attack.html'">
+                    ⏱️ Time Attack
+                </button>
+                <button class="mode-btn endless" onclick="window.location.href='endless_mode.html'">
+                    ♾️ Endless Mode
+                </button>
+                <button class="mode-btn multiplayer" onclick="window.location.href='multiplayer.html'">
+                    👥 Multiplayer
+                </button>
+                <button class="mode-btn ai" onclick="window.location.href='ai_opponent.html'">
+                    🤖 AI Opponent
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        let audioContext;
+        let soundEnabled = true;
+
+        // Sound effects
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Audio not supported');
+                soundEnabled = false;
+            }
+        }
+
+        function playSound(frequency, duration, type = 'sine') {
+            if (!soundEnabled || !audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playClickSound() {
+            playSound(800, 0.1);
+        }
+
+        function playSuccessSound() {
+            playSound(523, 0.2); // C5
+            setTimeout(() => playSound(659, 0.2), 100); // E5
+            setTimeout(() => playSound(784, 0.3), 200); // G5
+        }
+
+        function playErrorSound() {
+            playSound(200, 0.3, 'sawtooth');
+        }
+
+        function playWarmSound() {
+            playSound(400, 0.2);
+            setTimeout(() => playSound(450, 0.2), 100);
+        }
+
+        function playHintSound() {
+            playSound(600, 0.2, 'triangle');
+            setTimeout(() => playSound(700, 0.2, 'triangle'), 200);
+        }
+
+        // Difficulty settings (must be defined first)
+        const difficulties = {
+            easy: { min: 1, max: 50, attempts: 10 },
+            medium: { min: 1, max: 100, attempts: 7 },
+            hard: { min: 1, max: 200, attempts: 5 }
+        };
+
+        // Game state variables
+        let secretNumber;
+        let attempts;
+        let maxAttempts;
+        let minNumber;
+        let maxNumber;
+        let currentDifficulty = 'easy';
+        let gameActive = true;
+        let currentTheme = 'light';
+        let hintsRemaining = 3;
+        let usedHints = new Set();
+        let currentLanguage = 'en';
+        let currentGameMode = 'classic';
+        let timerInterval;
+        let timeRemaining;
+        let currentPlayer = 1;
+        let playerScores = { 1: 0, 2: 0 };
+        let multiplayerSocket;
+        let recognition = null;
+        let isListening = false;
+
+        // Statistics (using variables instead of localStorage)
+        let gamesPlayed = 0;
+        let gamesWon = 0;
+        let bestScore = 0;
+
+        // Translations
+        const translations = {
+            en: {
+                title: "🎯 Number Guessing Game",
+                subtitle: "Test your intuition and guess the secret number!",
+                chooseDifficulty: "Choose Difficulty:",
+                easy: "Easy (1-50, 10 attempts)",
+                medium: "Medium (1-100, 7 attempts)",
+                hard: "Hard (1-200, 5 attempts)",
+                thinkingNumber: "I'm thinking of a number between {min} and {max}. You have {attempts} attempts!",
+                enterGuess: "Enter your guess",
+                guessBtn: "Guess!",
+                attempts: "Attempts: {current} / {max}",
+                firstGuess: "Make your first guess! 🤔",
+                tooLow: "📈 Too low! Try higher.",
+                tooHigh: "📉 Too high! Try lower.",
+                gettingWarmLow: "📈 Too low, but you're getting warm! 🔥",
+                gettingWarmHigh: "📉 Too high, but you're getting warm! 🔥",
+                attemptsLeft: " ({attempts} attempts left)",
+                congratulations: "🎉 Congratulations! You guessed it in {attempts} attempts! Score: {score}",
+                gameOver: "💔 Game Over! The number was {number}",
+                newGame: "New Game",
+                getHint: "🧠 Get Hint",
+                hintsRemaining: "Hints remaining: {count}",
+                noMoreHints: "No more helpful hints available! 🤔",
+                statistics: "📊 Game Statistics",
+                gamesPlayed: "Games Played:",
+                gamesWon: "Games Won:",
+                winRate: "Win Rate:",
+                bestScore: "Best Score:",
+                invalidInput: "Please enter a number between {min} and {max}!",
+                selectGameMode: "Select Game Mode:",
+                classicMode: "🎯 Classic Mode",
+                timeAttackMode: "⏱️ Time Attack",
+                endlessMode: "♾️ Endless Mode",
+                multiplayerMode: "👥 Multiplayer",
+                timeRemaining: "Time Remaining: {time}s",
+                player1: "Player 1",
+                player2: "Player 2",
+                playerTurn: "Player {player}'s turn",
+                waitingForPlayer: "Waiting for other player...",
+                playerWon: "Player {player} won!",
+                playerScore: "Score: {score}",
+                startListening: "Listening... Say your guess!",
+                stopListening: "Voice recognition stopped",
+                noVoiceSupport: "Voice recognition not supported in this browser",
+                voiceError: "Error occurred in voice recognition",
+                voiceGuess: "I heard: {number}",
+                invalidVoiceGuess: "I didn't catch a valid number. Please try again!"
+            },
+            es: {
+                title: "🎯 Juego de Adivinar Números",
+                subtitle: "¡Pon a prueba tu intuición y adivina el número secreto!",
+                chooseDifficulty: "Elige la Dificultad:",
+                easy: "Fácil (1-50, 10 intentos)",
+                medium: "Medio (1-100, 7 intentos)",
+                hard: "Difícil (1-200, 5 intentos)",
+                thinkingNumber: "Estoy pensando en un número entre {min} y {max}. ¡Tienes {attempts} intentos!",
+                enterGuess: "Ingresa tu número",
+                guessBtn: "¡Adivinar!",
+                attempts: "Intentos: {current} / {max}",
+                firstGuess: "¡Haz tu primer intento! 🤔",
+                tooLow: "📈 ¡Muy bajo! Intenta más alto.",
+                tooHigh: "📉 ¡Muy alto! Intenta más bajo.",
+                gettingWarmLow: "📈 Bajo, ¡pero te estás acercando! 🔥",
+                gettingWarmHigh: "📉 Alto, ¡pero te estás acercando! 🔥",
+                attemptsLeft: " ({attempts} intentos restantes)",
+                congratulations: "🎉 ¡Felicitaciones! ¡Lo adivinaste en {attempts} intentos! Puntaje: {score}",
+                gameOver: "💔 ¡Juego terminado! El número era {number}",
+                newGame: "Nuevo Juego",
+                getHint: "🧠 Obtener Pista",
+                hintsRemaining: "Pistas restantes: {count}",
+                noMoreHints: "¡No hay más pistas disponibles! 🤔",
+                statistics: "📊 Estadísticas del Juego",
+                gamesPlayed: "Partidas Jugadas:",
+                gamesWon: "Partidas Ganadas:",
+                winRate: "Tasa de Victoria:",
+                bestScore: "Mejor Puntaje:",
+                invalidInput: "¡Por favor ingresa un número entre {min} y {max}!",
+                selectGameMode: "Seleccionar Modo de Juego:",
+                classicMode: "🎯 Modo Clásico",
+                timeAttackMode: "⏱️ Contrarreloj",
+                endlessMode: "♾️ Modo Infinito",
+                multiplayerMode: "👥 Multijugador",
+                timeRemaining: "Tiempo Restante: {time}s",
+                player1: "Jugador 1",
+                player2: "Jugador 2",
+                playerTurn: "Turno del Jugador {player}",
+                waitingForPlayer: "Esperando al otro jugador...",
+                playerWon: "¡Jugador {player} ganó!",
+                playerScore: "Puntaje: {score}",
+                startListening: "Escuchando... ¡Di tu número!",
+                stopListening: "Reconocimiento de voz detenido",
+                noVoiceSupport: "El reconocimiento de voz no está soportado en este navegador",
+                voiceError: "Error en el reconocimiento de voz",
+                voiceGuess: "Escuché: {number}",
+                invalidVoiceGuess: "No detecté un número válido. ¡Inténtalo de nuevo!"
+            },
+            hi: {
+                title: "🎯 संख्या अनुमान खेल",
+                subtitle: "अपनी अंतर्ज्ञान का परीक्षण करें और गुप्त संख्या का अनुमान लगाएं!",
+                chooseDifficulty: "कठिनाई चुनें:",
+                easy: "आसान (1-50, 10 प्रयास)",
+                medium: "मध्यम (1-100, 7 प्रयास)",
+                hard: "कठिन (1-200, 5 प्रयास)",
+                thinkingNumber: "मैं {min} और {max} के बीच एक संख्या सोच रहा हूं। आपके पास {attempts} प्रयास हैं!",
+                enterGuess: "अपना अनुमान दर्ज करें",
+                guessBtn: "अनुमान लगाएं!",
+                attempts: "प्रयास: {current} / {max}",
+                firstGuess: "अपना पहला अनुमान लगाएं! 🤔",
+                tooLow: "📈 बहुत कम! ऊपर की कोशिश करें।",
+                tooHigh: "📉 बहुत ज्यादा! नीचे की कोशिश करें।",
+                gettingWarmLow: "📈 कम है, लेकिन आप करीब आ रहे हैं! 🔥",
+                gettingWarmHigh: "📉 ज्यादा है, लेकिन आप करीब आ रहे हैं! 🔥",
+                attemptsLeft: " ({attempts} प्रयास शेष)",
+                congratulations: "🎉 बधाई हो! आपने {attempts} प्रयासों में अनुमान लगा लिया! स्कोर: {score}",
+                gameOver: "💔 खेल समाप्त! संख्या {number} थी",
+                newGame: "नया खेल",
+                getHint: "🧠 संकेत लें",
+                hintsRemaining: "शेष संकेत: {count}",
+                noMoreHints: "कोई और सहायक संकेत उपलब्ध नहीं! 🤔",
+                statistics: "📊 खेल के आंकड़े",
+                gamesPlayed: "खेले गए खेल:",
+                gamesWon: "जीते गए खेल:",
+                winRate: "जीत का प्रतिशत:",
+                bestScore: "सर्वश्रेष्ठ स्कोर:",
+                invalidInput: "कृपया {min} और {max} के बीच एक संख्या दर्ज करें!",
+                selectGameMode: "खेल मोड चुनें:",
+                classicMode: "🎯 क्लासिक मोड",
+                timeAttackMode: "⏱️ टाइम अटैक",
+                endlessMode: "♾️ एंडलेस मोड",
+                multiplayerMode: "👥 मल्टीप्लेयर",
+                timeRemaining: "शेष समय: {time}s",
+                player1: "खिलाड़ी 1",
+                player2: "खिलाड़ी 2",
+                playerTurn: "खिलाड़ी {player} की बारी",
+                waitingForPlayer: "दूसरे खिलाड़ी की प्रतीक्षा...",
+                playerWon: "खिलाड़ी {player} विजयी!",
+                playerScore: "स्कोर: {score}",
+                startListening: "सुन रहा हूं... अपना अनुमान बोलें!",
+                stopListening: "आवाज पहचान बंद हो गई",
+                noVoiceSupport: "इस ब्राउज़र में वॉइस पहचान समर्थित नहीं है",
+                voiceError: "आवाज पहचान में त्रुटि हुई",
+                voiceGuess: "मैंने सुना: {number}",
+                invalidVoiceGuess: "मैं एक वैध संख्या नहीं सुन पाया। कृपया पुनः प्रयास करें!"
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            playClickSound();
+            
+            // Update button states
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="setLanguage('${lang}')"]`).classList.add('active');
+            
+            // Update voice recognition language
+            if (recognition) {
+                const langMap = {
+                    'en': 'en-US',
+                    'es': 'es-ES',
+                    'hi': 'hi-IN'
+                };
+                recognition.lang = langMap[lang] || 'en-US';
+            }
+            
+            // Update all text content
+            updateUIText();
+        }
+
+        function getTranslation(key, replacements = {}) {
+            let text = translations[currentLanguage][key] || translations['en'][key];
+            
+            // Replace placeholders with actual values
+            Object.keys(replacements).forEach(key => {
+                text = text.replace(`{${key}}`, replacements[key]);
+            });
+            
+            return text;
+        }
+
+        function updateUIText() {
+            // Update static text
+            document.querySelector('h1').textContent = getTranslation('title');
+            document.querySelector('.subtitle').textContent = getTranslation('subtitle');
+            document.querySelector('.difficulty-section h3').textContent = getTranslation('chooseDifficulty');
+            
+            // Update buttons
+            document.querySelector('.difficulty-btn.easy').textContent = getTranslation('easy');
+            document.querySelector('.difficulty-btn.medium').textContent = getTranslation('medium');
+            document.querySelector('.difficulty-btn.hard').textContent = getTranslation('hard');
+            document.querySelector('.guess-btn').textContent = getTranslation('guessBtn');
+            document.querySelector('.new-game-btn').textContent = getTranslation('newGame');
+            document.querySelector('#hintButton').textContent = getTranslation('getHint');
+            
+            // Update input placeholder
+            document.getElementById('guessInput').placeholder = getTranslation('enterGuess');
+            
+            // Update statistics
+            document.querySelector('.stats h3').textContent = getTranslation('statistics');
+            document.querySelector('.stats .stat-item:nth-child(1) span:first-child').textContent = getTranslation('gamesPlayed');
+            document.querySelector('.stats .stat-item:nth-child(2) span:first-child').textContent = getTranslation('gamesWon');
+            document.querySelector('.stats .stat-item:nth-child(3) span:first-child').textContent = getTranslation('winRate');
+            document.querySelector('.stats .stat-item:nth-child(4) span:first-child').textContent = getTranslation('bestScore');
+            
+            // Update dynamic content
+            if (gameActive) {
+                document.getElementById('gameInfo').textContent = getTranslation('thinkingNumber', {
+                    min: minNumber,
+                    max: maxNumber,
+                    attempts: maxAttempts
+                });
+            }
+            
+            updateAttemptsDisplay();
+            updateHintCount();
+        }
+
+        function updateAttemptsDisplay() {
+            document.getElementById('attemptsText').textContent = getTranslation('attempts', {
+                current: attempts,
+                max: maxAttempts
+            });
+            const progressPercent = (attempts / maxAttempts) * 100;
+            document.getElementById('progressFill').style.width = `${progressPercent}%`;
+        }
+
+        function updateHintCount() {
+            document.getElementById('hintCount').textContent = getTranslation('hintsRemaining', {
+                count: hintsRemaining
+            });
+            document.getElementById('hintButton').disabled = hintsRemaining <= 0;
+        }
+
+        function showFeedback(key, type, replacements = {}) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = getTranslation(key, replacements);
+            feedback.className = `feedback ${type}`;
+
+            // Add animation for warm feedback
+            if (type === 'warm') {
+                feedback.style.animation = 'pulse 1s';
+                setTimeout(() => {
+                    feedback.style.animation = '';
+                }, 1000);
+            }
+        }
+
+        function makeGuess() {
+            if (!gameActive) return;
+            
+            playClickSound();
+            
+            const guessInput = document.getElementById('guessInput');
+            const guess = parseInt(guessInput.value);
+            
+            // Validate input
+            if (isNaN(guess) || guess < minNumber || guess > maxNumber) {
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = getTranslation('invalidInput', { min: minNumber, max: maxNumber });
+                feedback.className = 'feedback error';
+                playErrorSound();
+                return;
+            }
+            
+            attempts++;
+            updateAttemptsDisplay();
+            
+            // Check guess
+            const difference = Math.abs(guess - secretNumber);
+            const feedback = document.getElementById('feedback');
+            
+            if (guess === secretNumber) {
+                const score = (maxAttempts - attempts + 1) * 10;
+                feedback.textContent = getTranslation('congratulations', { attempts, score });
+                feedback.className = 'feedback success';
+                playSuccessSound();
+                gamesWon++;
+                gamesPlayed++;
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                }
+                
+                endGame();
+            } else if (attempts >= maxAttempts) {
+                feedback.textContent = getTranslation('gameOver', { number: secretNumber });
+                feedback.className = 'feedback error';
+                playErrorSound();
+                gamesPlayed++;
+                endGame();
+            } else {
+                let message;
+                let feedbackType;
+                
+                if (guess < secretNumber) {
+                    if (difference <= 5) {
+                        message = "📈 Too low, but you're getting warm! 🔥";
+                        feedbackType = 'warm';
+                        playWarmSound();
+                    } else {
+                        message = "📈 Too low! Try higher.";
+                        feedbackType = 'info';
+                        playErrorSound();
+                    }
+                } else {
+                    if (difference <= 5) {
+                        message = "📉 Too high, but you're getting warm! 🔥";
+                        feedbackType = 'warm';
+                        playWarmSound();
+                    } else {
+                        message = "📉 Too high! Try lower.";
+                        feedbackType = 'info';
+                        playErrorSound();
+                    }
+                }
+                
+                message += ` (${maxAttempts - attempts} attempts left)`;
+                feedback.textContent = message;
+                feedback.className = `feedback ${feedbackType}`;
+            }
+            
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.className = theme;
+            
+            // Update theme button states
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to current theme button based on theme
+            const themeMap = {
+                'light': 0,
+                'dark': 1,
+                'retro': 2,
+                'neon': 3
+            };
+            
+            const buttons = document.querySelectorAll('.theme-btn');
+            if (buttons[themeMap[theme]]) {
+                buttons[themeMap[theme]].classList.add('active');
+            }
+            
+            playClickSound();
+        }
+
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            const settings = difficulties[difficulty];
+            
+            // Update button states
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.difficulty-btn.${difficulty}`).classList.add('active');
+            
+            // Update game settings
+            minNumber = settings.min;
+            maxNumber = settings.max;
+            maxAttempts = settings.attempts;
+            
+            // Update input constraints
+            const input = document.getElementById('guessInput');
+            input.min = minNumber;
+            input.max = maxNumber;
+            
+            playClickSound();
+            
+            // Start new game
+            newGame();
+        }
+
+        function newGame() {
+            secretNumber = Math.floor(Math.random() * (maxNumber - minNumber + 1)) + minNumber;
+            attempts = 0;
+            gameActive = true;
+            hintsRemaining = 3;
+            usedHints.clear();
+            
+            playClickSound();
+            
+            // Update UI
+            document.getElementById('gameInfo').textContent = 
+                `I'm thinking of a number between ${minNumber} and ${maxNumber}. You have ${maxAttempts} attempts!`;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').disabled = false;
+            document.querySelector('.guess-btn').disabled = false;
+            document.getElementById('feedback').textContent = 'Make your first guess! 🤔';
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('hintText').className = 'hint-text';
+            document.getElementById('hintText').textContent = '';
+            
+            updateAttemptsDisplay();
+            updateHintCount();
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById('guessInput').disabled = true;
+            document.querySelector('.guess-btn').disabled = true;
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('gamesPlayed').textContent = gamesPlayed;
+            document.getElementById('gamesWon').textContent = gamesWon;
+            
+            const winRate = gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0;
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            
+            document.getElementById('bestScore').textContent = bestScore > 0 ? bestScore : '-';
+            
+            // Note: Statistics are stored in memory for this session only
+            // In a real environment, you could use localStorage for persistence
+        }
+
+        function getHint() {
+            if (!gameActive || hintsRemaining <= 0) return;
+            
+            playHintSound();
+            hintsRemaining--;
+            
+            // Get all possible hints
+            const hints = [
+                {
+                    check: () => secretNumber % 2 === 0,
+                    message: "The number is even 👥"
+                },
+                {
+                    check: () => secretNumber % 2 !== 0,
+                    message: "The number is odd 1️⃣"
+                },
+                {
+                    check: () => secretNumber % 5 === 0,
+                    message: "The number is divisible by 5 🖐️"
+                },
+                {
+                    check: () => secretNumber % 3 === 0,
+                    message: "The number is divisible by 3 📐"
+                },
+                {
+                    check: () => isPrime(secretNumber),
+                    message: "This is a prime number! 🎯"
+                },
+                {
+                    check: () => Math.sqrt(secretNumber) % 1 === 0,
+                    message: "This is a perfect square! ⭐"
+                },
+                {
+                    check: () => secretNumber % 10 === 0,
+                    message: "The number ends with 0 0️⃣"
+                },
+                {
+                    check: () => secretNumber > (maxNumber + minNumber) / 2,
+                    message: "The number is in the upper half of the range ⬆️"
+                },
+                {
+                    check: () => secretNumber < (maxNumber + minNumber) / 2,
+                    message: "The number is in the lower half of the range ⬇️"
+                }
+            ];
+            
+            // Filter out used hints and true hints
+            const availableHints = hints.filter(hint => 
+                !usedHints.has(hint.message) && hint.check()
+            );
+            
+            if (availableHints.length === 0) {
+                const hint = "No more helpful hints available! 🤔";
+                showHint(hint);
+                return;
+            }
+            
+            // Select a random hint from available hints
+            const randomHint = availableHints[Math.floor(Math.random() * availableHints.length)];
+            usedHints.add(randomHint.message);
+            
+            showHint(randomHint.message);
+            updateHintCount();
+        }
+
+        function isPrime(num) {
+            if (num <= 1) return false;
+            if (num <= 3) return true;
+            if (num % 2 === 0 || num % 3 === 0) return false;
+            
+            for (let i = 5; i * i <= num; i += 6) {
+                if (num % i === 0 || num % (i + 2) === 0) return false;
+            }
+            return true;
+        }
+
+        function showHint(message) {
+            const hintText = document.getElementById('hintText');
+            hintText.textContent = message;
+            hintText.className = 'hint-text active';
+        }
+
+        // Event listeners
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                makeGuess();
+            }
+        });
+
+        // Initialize game on page load
+        window.onload = initGame;
+
+        function setGameMode(mode) {
+            currentGameMode = mode;
+            clearInterval(timerInterval);
+            
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.mode-btn.${mode}`).classList.add('active');
+            
+            // Reset game state
+            attempts = 0;
+            playerScores = { 1: 0, 2: 0 };
+            currentPlayer = 1;
+            
+            // Mode-specific setup
+            switch(mode) {
+                case 'classic':
+                    maxAttempts = difficulties[currentDifficulty].attempts;
+                    break;
+                case 'timeAttack':
+                    maxAttempts = Infinity;
+                    timeRemaining = 60; // 60 seconds for time attack
+                    startTimer();
+                    break;
+                case 'endless':
+                    maxAttempts = Infinity;
+                    break;
+                case 'multiplayer':
+                    maxAttempts = difficulties[currentDifficulty].attempts;
+                    setupMultiplayer();
+                    break;
+            }
+            
+            newGame();
+        }
+
+        function startTimer() {
+            const timerElement = document.createElement('div');
+            timerElement.className = 'timer active';
+            timerElement.id = 'timer';
+            document.querySelector('.game-info').appendChild(timerElement);
+            
+            updateTimer();
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimer();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                    showFeedback('gameOver', 'error', { number: secretNumber });
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const timer = document.getElementById('timer');
+            if (timer) {
+                timer.textContent = getTranslation('timeRemaining', { time: timeRemaining });
+            }
+        }
+
+        function setupMultiplayer() {
+            // Create multiplayer info section
+            const multiplayerInfo = document.createElement('div');
+            multiplayerInfo.className = 'multiplayer-info active';
+            multiplayerInfo.innerHTML = `
+                <div class="player-status">
+                    <div class="player-card ${currentPlayer === 1 ? 'current' : ''}">
+                        <h4>${getTranslation('player1')}</h4>
+                        <p>${getTranslation('playerScore', { score: playerScores[1] })}</p>
+                    </div>
+                    <div class="player-card ${currentPlayer === 2 ? 'current' : ''}">
+                        <h4>${getTranslation('player2')}</h4>
+                        <p>${getTranslation('playerScore', { score: playerScores[2] })}</p>
+                    </div>
+                </div>
+            `;
+            document.querySelector('.game-info').appendChild(multiplayerInfo);
+            
+            // In a real implementation, you would set up WebSocket connection here
+            // For this demo, we'll simulate multiplayer with local turn-based play
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateMultiplayerUI();
+        }
+
+        function updateMultiplayerUI() {
+            const playerCards = document.querySelectorAll('.player-card');
+            playerCards.forEach((card, index) => {
+                card.classList.toggle('current', index + 1 === currentPlayer);
+                card.querySelector('p').textContent = getTranslation('playerScore', { 
+                    score: playerScores[index + 1] 
+                });
+            });
+        }
+
+        function initVoiceRecognition() {
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    recognition = new SpeechRecognition();
+                    recognition.continuous = false;
+                    recognition.interimResults = false;
+                    
+                    // Set language based on current game language
+                    const langMap = {
+                        'en': 'en-US',
+                        'es': 'es-ES',
+                        'hi': 'hi-IN'
+                    };
+                    recognition.lang = langMap[currentLanguage] || 'en-US';
+                    
+                    setupVoiceEventListeners();
+                } else {
+                    document.getElementById('voiceButton').style.display = 'none';
+                    showVoiceFeedback(getTranslation('noVoiceSupport'), 3000);
+                }
+            } catch (e) {
+                document.getElementById('voiceButton').style.display = 'none';
+                showVoiceFeedback(getTranslation('noVoiceSupport'), 3000);
+            }
+        }
+
+        function setupVoiceEventListeners() {
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voiceButton').classList.add('listening');
+                showVoiceFeedback(getTranslation('startListening'));
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('voiceButton').classList.remove('listening');
+                hideVoiceFeedback();
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                document.getElementById('voiceButton').classList.remove('listening');
+                showVoiceFeedback(getTranslation('voiceError'), 3000);
+                console.error('Speech recognition error:', event.error);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                const number = parseVoiceInput(transcript);
+                
+                if (number !== null) {
+                    showVoiceFeedback(getTranslation('voiceGuess', { number: number }), 2000);
+                    document.getElementById('guessInput').value = number;
+                    setTimeout(() => makeGuess(), 1000);
+                } else {
+                    showVoiceFeedback(getTranslation('invalidVoiceGuess'), 3000);
+                }
+            };
+        }
+
+        function parseVoiceInput(transcript) {
+            // Remove all spaces and convert written numbers to digits
+            const cleanTranscript = transcript.replace(/\s+/g, '');
+            
+            // First try to find a direct number
+            const directNumber = parseInt(cleanTranscript);
+            if (!isNaN(directNumber)) return directNumber;
+            
+            // Define number words based on current language
+            const numberWords = {
+                en: {
+                    'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+                    'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+                    'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13,
+                    'fourteen': 14, 'fifteen': 15, 'sixteen': 16, 'seventeen': 17,
+                    'eighteen': 18, 'nineteen': 19, 'twenty': 20
+                },
+                es: {
+                    'cero': 0, 'uno': 1, 'dos': 2, 'tres': 3, 'cuatro': 4,
+                    'cinco': 5, 'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9,
+                    'diez': 10, 'once': 11, 'doce': 12, 'trece': 13,
+                    'catorce': 14, 'quince': 15, 'dieciséis': 16, 'diecisiete': 17,
+                    'dieciocho': 18, 'diecinueve': 19, 'veinte': 20
+                },
+                hi: {
+                    'शून्य': 0, 'एक': 1, 'दो': 2, 'तीन': 3, 'चार': 4,
+                    'पांच': 5, 'छह': 6, 'सात': 7, 'आठ': 8, 'नौ': 9,
+                    'दस': 10, 'ग्यारह': 11, 'बारह': 12, 'तेरह': 13,
+                    'चौदह': 14, 'पंद्रह': 15, 'सोलह': 16, 'सत्रह': 17,
+                    'अठारह': 18, 'उन्नीस': 19, 'बीस': 20
+                }
+            };
+            
+            // Try to match number words
+            const currentNumberWords = numberWords[currentLanguage] || numberWords.en;
+            for (let word in currentNumberWords) {
+                if (cleanTranscript.includes(word)) {
+                    return currentNumberWords[word];
+                }
+            }
+            
+            return null;
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                initVoiceRecognition();
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+                showVoiceFeedback(getTranslation('stopListening'), 2000);
+            } else {
+                recognition.start();
+            }
+        }
+
+        function showVoiceFeedback(message, duration = null) {
+            const feedback = document.getElementById('voiceFeedback');
+            feedback.textContent = message;
+            feedback.classList.add('active');
+            
+            if (duration) {
+                setTimeout(() => hideVoiceFeedback(), duration);
+            }
+        }
+
+        function hideVoiceFeedback() {
+            const feedback = document.getElementById('voiceFeedback');
+            feedback.classList.remove('active');
+        }
+
+        // Initialize voice recognition when the game starts
+        function initGame() {
+            initAudio();
+            initVoiceRecognition();
+            updateStats();
+            setDifficulty('easy');
+            setTheme('light');
+            setLanguage('en');
+            setGameMode('classic');
+        }
+    </script>
+</body>
+</html>

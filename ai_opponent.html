@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game - AI Opponent Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #673AB7 0%, #512DA8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes thinking {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            color: #fff;
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .setup-section {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .setup-section.active {
+            display: block;
+        }
+
+        .game-section {
+            display: none;
+        }
+
+        .game-section.active {
+            display: block;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        input[type="number"] {
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            width: 200px;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            background: #9C27B0;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-thinking {
+            font-size: 1.2em;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .ai-avatar {
+            font-size: 2em;
+            animation: thinking 1.5s infinite;
+        }
+
+        .guess-history {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .guess-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .guess-item .number {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .guess-item .result {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .result.too-high {
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .result.too-low {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .result.correct {
+            background: rgba(255, 235, 59, 0.2);
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-5px);
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+    <a href="number_game.html" class="back-button">← Back to Main Game</a>
+    
+    <div class="game-container">
+        <h1>🤖 AI Opponent Mode</h1>
+        <p class="subtitle">Think of a number and let the AI try to guess it!</p>
+
+        <div class="setup-section active">
+            <div class="input-group">
+                <label for="minNumber">Minimum Number:</label>
+                <input type="number" id="minNumber" value="1" min="1" max="999">
+            </div>
+            <div class="input-group">
+                <label for="maxNumber">Maximum Number:</label>
+                <input type="number" id="maxNumber" value="100" min="2" max="1000">
+            </div>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+
+        <div class="game-section">
+            <div class="ai-thinking">
+                <span class="ai-avatar">🤖</span>
+                <span id="aiThinkingText">Thinking...</span>
+            </div>
+
+            <div class="guess-history">
+                <div id="guessLog"></div>
+            </div>
+
+            <div class="feedback-buttons">
+                <button onclick="provideFeedback('low')">Too Low</button>
+                <button onclick="provideFeedback('correct')">Correct!</button>
+                <button onclick="provideFeedback('high')">Too High</button>
+            </div>
+
+            <div class="stats">
+                <h3>📊 AI Performance</h3>
+                <div class="stat-item">
+                    <span>Games Played:</span>
+                    <span id="gamesPlayed">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Average Guesses:</span>
+                    <span id="avgGuesses">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Best Game:</span>
+                    <span id="bestGame">-</span>
+                </div>
+            </div>
+
+            <button onclick="newGame()" class="new-game-btn">New Game</button>
+        </div>
+    </div>
+
+    <script>
+        let minNumber, maxNumber;
+        let currentGuess;
+        let guessCount = 0;
+        let gameActive = false;
+        let guessHistory = [];
+        let stats = {
+            gamesPlayed: 0,
+            totalGuesses: 0,
+            bestGame: Infinity
+        };
+
+        function startGame() {
+            minNumber = parseInt(document.getElementById('minNumber').value);
+            maxNumber = parseInt(document.getElementById('maxNumber').value);
+
+            if (isNaN(minNumber) || isNaN(maxNumber) || minNumber >= maxNumber) {
+                alert('Please enter valid numbers (min < max)');
+                return;
+            }
+
+            document.querySelector('.setup-section').classList.remove('active');
+            document.querySelector('.game-section').classList.add('active');
+            
+            gameActive = true;
+            guessCount = 0;
+            guessHistory = [];
+            document.getElementById('guessLog').innerHTML = '';
+            
+            makeAIGuess();
+        }
+
+        function makeAIGuess() {
+            if (!gameActive) return;
+
+            // Simple binary search algorithm
+            let possibleMin = minNumber;
+            let possibleMax = maxNumber;
+            
+            if (guessHistory.length > 0) {
+                guessHistory.forEach(guess => {
+                    if (guess.result === 'high' && guess.number < possibleMax) {
+                        possibleMax = guess.number - 1;
+                    } else if (guess.result === 'low' && guess.number > possibleMin) {
+                        possibleMin = guess.number + 1;
+                    }
+                });
+            }
+
+            currentGuess = Math.floor((possibleMin + possibleMax) / 2);
+            guessCount++;
+
+            // Simulate AI thinking
+            document.getElementById('aiThinkingText').textContent = 'Thinking...';
+            setTimeout(() => {
+                document.getElementById('aiThinkingText').textContent = `Is it ${currentGuess}?`;
+                addGuessToHistory(currentGuess, 'pending');
+            }, 1000);
+        }
+
+        function provideFeedback(result) {
+            if (!gameActive) return;
+
+            updateGuessInHistory(currentGuess, result);
+
+            if (result === 'correct') {
+                gameActive = false;
+                updateStats();
+                document.getElementById('aiThinkingText').textContent = 'I won! 🎉';
+            } else {
+                guessHistory.push({ number: currentGuess, result: result });
+                makeAIGuess();
+            }
+        }
+
+        function addGuessToHistory(number, result) {
+            const guessItem = document.createElement('div');
+            guessItem.className = 'guess-item';
+            guessItem.innerHTML = `
+                <span class="number">${number}</span>
+                <span class="result ${result}">${getResultEmoji(result)}</span>
+            `;
+            document.getElementById('guessLog').insertBefore(guessItem, document.getElementById('guessLog').firstChild);
+        }
+
+        function updateGuessInHistory(number, result) {
+            const guessItems = document.querySelectorAll('.guess-item');
+            const lastGuess = guessItems[0];
+            lastGuess.querySelector('.result').className = `result ${result}`;
+            lastGuess.querySelector('.result').textContent = getResultEmoji(result);
+        }
+
+        function getResultEmoji(result) {
+            switch(result) {
+                case 'low': return '📈 Too Low';
+                case 'high': return '📉 Too High';
+                case 'correct': return '🎯 Correct!';
+                default: return '🤔 Thinking...';
+            }
+        }
+
+        function updateStats() {
+            stats.gamesPlayed++;
+            stats.totalGuesses += guessCount;
+            stats.bestGame = Math.min(stats.bestGame, guessCount);
+
+            document.getElementById('gamesPlayed').textContent = stats.gamesPlayed;
+            document.getElementById('avgGuesses').textContent = 
+                (stats.totalGuesses / stats.gamesPlayed).toFixed(1);
+            document.getElementById('bestGame').textContent = stats.bestGame;
+        }
+
+        function newGame() {
+            document.querySelector('.game-section').classList.remove('active');
+            document.querySelector('.setup-section').classList.add('active');
+        }
+    </script>
+</body>
+</html> 
